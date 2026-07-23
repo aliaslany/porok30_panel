@@ -1,0 +1,6 @@
+{
+  "name": "Porok30 RMS Bot",
+  "description": "Review, Modify, and Send (RMS) messaging bot management platform for Porok30s",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
