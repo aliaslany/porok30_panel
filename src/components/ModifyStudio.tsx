@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   FileEdit,
-  Sparkles,
   CheckCircle2,
   Send,
   RefreshCw,
@@ -15,6 +14,7 @@ import {
   Scissors,
   Bookmark,
   Zap,
+  ListOrdered,
 } from 'lucide-react';
 import { SubmissionItem, RMSStatus, CategoryTag } from '../types';
 
@@ -114,16 +114,15 @@ export const ModifyStudio: React.FC<ModifyStudioProps> = ({
     }
   };
 
-  const handleAiSmartPolish = () => {
-    // Simulated AI polish & formatting enhancement
-    let polished = editContent;
-    if (!polished.includes('•')) {
-      polished = polished.replace(/(\n- |\n1\. |\n2\. |\n3\. )/g, '\n• ');
+  const handleFormatListBulletPoints = () => {
+    let formatted = editContent;
+    if (!formatted.includes('•')) {
+      formatted = formatted.replace(/(\n- |\n1\. |\n2\. |\n3\. )/g, '\n• ');
     }
-    if (!polished.startsWith('✨') && !polished.startsWith('📢') && !polished.startsWith('⚠️')) {
-      polished = `✨ **${editTitle.toUpperCase()}**\n\n${polished}`;
+    if (!formatted.startsWith('📢') && !formatted.startsWith('⚠️')) {
+      formatted = `📢 **${editTitle.toUpperCase()}**\n\n${formatted}`;
     }
-    setEditContent(polished);
+    setEditContent(formatted);
   };
 
   const handleSearchReplace = () => {
@@ -244,11 +243,11 @@ export const ModifyStudio: React.FC<ModifyStudioProps> = ({
                   <span>+ Porok30 Branding</span>
                 </button>
                 <button
-                  onClick={handleAiSmartPolish}
+                  onClick={handleFormatListBulletPoints}
                   className="px-2.5 py-1 bg-indigo-900/60 hover:bg-indigo-800/80 text-indigo-200 rounded-lg text-xs font-medium border border-indigo-700/50 transition-colors flex items-center space-x-1"
                 >
-                  <Sparkles className="w-3 h-3 text-indigo-400" />
-                  <span>AI Smart Polish</span>
+                  <ListOrdered className="w-3 h-3 text-indigo-400" />
+                  <span>Format List Bullets</span>
                 </button>
                 <button
                   onClick={handleAutoBoldKeywords}

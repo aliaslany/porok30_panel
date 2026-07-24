@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sliders, Plus, Trash2, CheckCircle2, ToggleLeft, ToggleRight, Sparkles } from 'lucide-react';
+import { Sliders, Plus, Trash2, CheckCircle2, ToggleLeft, ToggleRight, Zap } from 'lucide-react';
 import { AutomationRule } from '../types';
 
 interface AutomationRulesProps {
@@ -135,7 +135,7 @@ export const AutomationRules: React.FC<AutomationRulesProps> = ({
         <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
             <h3 className="text-base font-bold text-white flex items-center space-x-2">
-              <Sparkles className="w-5 h-5 text-indigo-400" />
+              <Zap className="w-5 h-5 text-indigo-400" />
               <span>New Rule Definition</span>
             </h3>
 

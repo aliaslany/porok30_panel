@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, Sparkles, Send } from 'lucide-react';
+import { Plus, X, Send } from 'lucide-react';
 import { CategoryTag, PriorityLevel, SubmissionItem } from '../types';
 
 interface NewSubmissionModalProps {
