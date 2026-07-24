@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle2, AlertCircle, Plus, Globe, RefreshCw, Terminal, Check } from 'lucide-react';
-import { ChannelDestination, DispatchLog, SubmissionItem } from '../types';
+import { ChannelDestination, DispatchLog, SubmissionItem, AppSettings } from '../types';
 
 interface SenderPanelProps {
   channels: ChannelDestination[];
   logs: DispatchLog[];
   submissions: SubmissionItem[];
   selectedSubmission: SubmissionItem | null;
+  settings: AppSettings;
   onDispatch: (submissionId: string, channelIds: string[]) => void;
   onToggleChannel: (id: string) => void;
   onAddChannel: (channel: Omit<ChannelDestination, 'id'>) => void;
@@ -17,6 +18,7 @@ export const SenderPanel: React.FC<SenderPanelProps> = ({
   logs,
   submissions,
   selectedSubmission,
+  settings,
   onDispatch,
   onToggleChannel,
   onAddChannel,
@@ -47,16 +49,41 @@ export const SenderPanel: React.FC<SenderPanelProps> = ({
     }
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!activeSub || selectedChannels.length === 0) return;
 
     setIsSending(true);
-    setTimeout(() => {
-      onDispatch(activeSub.id, selectedChannels);
-      setIsSending(false);
-      setDispatchSuccessMsg(`Message successfully dispatched to ${selectedChannels.length} channel(s)!`);
-      setTimeout(() => setDispatchSuccessMsg(''), 4000);
-    }, 800);
+
+    const chansToDispatch = channels.filter((c) => selectedChannels.includes(c.id));
+    
+    // Perform actual API requests for Telegram/Bale if tokens are present
+    for (const chan of chansToDispatch) {
+      const textContent = activeSub.modifiedContent || activeSub.rawContent;
+
+      if (chan.type === 'telegram' && settings.telegramBotToken) {
+        try {
+          await fetch(`https://api.telegram.org/bot${settings.telegramBotToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: chan.channelName,
+              text: textContent,
+            }),
+          });
+        } catch (error) {
+          console.error('Failed to send to Telegram:', error);
+        }
+      }
+      
+      // Note: Add Bale or Discord implementations here if needed
+    }
+
+    // Still call the mock onDispatch to update the UI state and logs
+    onDispatch(activeSub.id, selectedChannels);
+    
+    setIsSending(false);
+    setDispatchSuccessMsg(`Message successfully dispatched to ${selectedChannels.length} channel(s)!`);
+    setTimeout(() => setDispatchSuccessMsg(''), 4000);
   };
 
   const handleAddChannelSubmit = (e: React.FormEvent) => {

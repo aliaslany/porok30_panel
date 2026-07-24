@@ -1,11 +1,11 @@
 import React from 'react';
-import { Bot, Radio, Plus, CheckCircle2, Sliders, Send, RefreshCw } from 'lucide-react';
+import { Bot, Radio, Plus, CheckCircle2, Sliders, Send, RefreshCw, Settings } from 'lucide-react';
 
 interface HeaderProps {
   botStatus: 'active' | 'paused' | 'manual';
   setBotStatus: (status: 'active' | 'paused' | 'manual') => void;
-  activeTab: 'review' | 'modify' | 'sender' | 'rules';
-  setActiveTab: (tab: 'review' | 'modify' | 'sender' | 'rules') => void;
+  activeTab: 'review' | 'modify' | 'sender' | 'rules' | 'settings';
+  setActiveTab: (tab: 'review' | 'modify' | 'sender' | 'rules' | 'settings') => void;
   onOpenNewSubmission: () => void;
   pendingCount: number;
 }
@@ -91,6 +91,18 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Sliders className="w-4 h-4" />
               <span>Automation Rules</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'settings'
+                  ? 'bg-cyan-600 text-white shadow-sm'
+                  : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              <span>Settings</span>
             </button>
           </nav>
 

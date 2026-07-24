@@ -17,6 +17,7 @@ import {
   Trash2,
   CheckSquare,
   Square,
+  RefreshCw,
 } from 'lucide-react';
 import { SubmissionItem, RMSStatus, CategoryTag, PriorityLevel } from '../types';
 
@@ -26,6 +27,8 @@ interface ReviewListProps {
   onSelectForModify: (item: SubmissionItem) => void;
   onSelectForSend: (item: SubmissionItem) => void;
   onDeleteSubmission: (id: string) => void;
+  onFetchUpdates?: () => void;
+  isFetching?: boolean;
 }
 
 export const ReviewList: React.FC<ReviewListProps> = ({
@@ -34,6 +37,8 @@ export const ReviewList: React.FC<ReviewListProps> = ({
   onSelectForModify,
   onSelectForSend,
   onDeleteSubmission,
+  onFetchUpdates,
+  isFetching,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -178,6 +183,17 @@ export const ReviewList: React.FC<ReviewListProps> = ({
               <option value="general" className="bg-slate-900">General</option>
             </select>
           </div>
+
+          {onFetchUpdates && (
+            <button
+              onClick={onFetchUpdates}
+              disabled={isFetching}
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-blue-600/50 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} />
+              <span>{isFetching ? 'Fetching...' : 'Fetch Updates'}</span>
+            </button>
+          )}
         </div>
       </div>
 

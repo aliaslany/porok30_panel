@@ -5,6 +5,7 @@ import { ReviewList } from './components/ReviewList';
 import { ModifyStudio } from './components/ModifyStudio';
 import { SenderPanel } from './components/SenderPanel';
 import { AutomationRules } from './components/AutomationRules';
+import { SettingsPanel } from './components/SettingsPanel';
 import { NewSubmissionModal } from './components/NewSubmissionModal';
 import {
   INITIAL_SUBMISSIONS,
@@ -12,15 +13,30 @@ import {
   INITIAL_RULES,
   INITIAL_LOGS,
 } from './data/mockData';
-import { SubmissionItem, RMSStatus, CategoryTag, AutomationRule, ChannelDestination, DispatchLog } from './types';
+import { SubmissionItem, RMSStatus, CategoryTag, AutomationRule, ChannelDestination, DispatchLog, AppSettings } from './types';
 
 export function App() {
   const [botStatus, setBotStatus] = useState<'active' | 'paused' | 'manual'>('active');
-  const [activeTab, setActiveTab] = useState<'review' | 'modify' | 'sender' | 'rules'>('review');
+  const [activeTab, setActiveTab] = useState<'review' | 'modify' | 'sender' | 'rules' | 'settings'>('review');
   const [submissions, setSubmissions] = useState<SubmissionItem[]>(INITIAL_SUBMISSIONS);
   const [channels, setChannels] = useState<ChannelDestination[]>(INITIAL_CHANNELS);
   const [rules, setRules] = useState<AutomationRule[]>(INITIAL_RULES);
   const [logs, setLogs] = useState<DispatchLog[]>(INITIAL_LOGS);
+
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const saved = localStorage.getItem('porok30_settings');
+    const parsed = saved ? JSON.parse(saved) : {};
+    return {
+      telegramBotToken: parsed.telegramBotToken || '',
+      baleBotToken: parsed.baleBotToken || '',
+      monitoredChannels: parsed.monitoredChannels || ['https://t.me/ProxyMTProto'],
+    };
+  });
+
+  const handleSaveSettings = (newSettings: AppSettings) => {
+    setSettings(newSettings);
+    localStorage.setItem('porok30_settings', JSON.stringify(newSettings));
+  };
 
   const [selectedForModify, setSelectedForModify] = useState<SubmissionItem | null>(null);
   const [selectedForSend, setSelectedForSend] = useState<SubmissionItem | null>(null);
@@ -110,6 +126,78 @@ export function App() {
     setSubmissions((prev) => [newSubmission, ...prev]);
   };
 
+  // Fetch updates from monitored channels
+  const [isFetching, setIsFetching] = useState(false);
+
+  const fetchChannelUpdates = async () => {
+    setIsFetching(true);
+    let addedCount = 0;
+    
+    for (const channelUrl of settings.monitoredChannels || []) {
+      if (!channelUrl) continue;
+      try {
+        const urlObj = new URL(channelUrl);
+        const channelName = urlObj.pathname.split('/').pop() || 'telegram';
+        
+        // Use RSSHub and rss2json to reliably bypass CORS and Cloudflare blocks on Telegram
+        const rssUrl = `https://rsshub.rssforever.com/telegram/channel/${channelName}`;
+        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`);
+        const data = await response.json();
+        
+        if (data.status === 'ok' && data.items) {
+          data.items.forEach((item: any) => {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = item.description || item.content || '';
+            
+            // Replace <br> and <p> with newlines for better text formatting before extracting textContent
+            tempDiv.querySelectorAll('br, p').forEach(el => {
+              el.appendChild(document.createTextNode('\n'));
+            });
+            
+            const rawText = (tempDiv.textContent || tempDiv.innerText || '').trim();
+            const idEl = item.link || item.guid;
+            const author = data.feed?.author || channelName;
+            
+            if (rawText && idEl) {
+              setSubmissions(currentSubs => {
+                const exists = currentSubs.some(s => s.rawContent === rawText || s.title.includes(idEl.split('/').pop() || idEl));
+                if (!exists) {
+                  addedCount++;
+                  const nextIdNumber = 3000 + currentSubs.length + 1;
+                  const newItem: SubmissionItem = {
+                    id: `POROK-${nextIdNumber}`,
+                    title: `Post ${idEl.split('/').pop() || nextIdNumber}`,
+                    rawContent: rawText,
+                    modifiedContent: rawText,
+                    source: channelUrl,
+                    author: author,
+                    category: 'news',
+                    priority: 'medium',
+                    tags: [channelName],
+                    status: 'pending',
+                    createdAt: new Date().toISOString(),
+                    reviewMetadata: {
+                      wordCount: rawText.split(/\s+/).filter(Boolean).length,
+                      charCount: rawText.length,
+                      hasLinks: rawText.includes('http'),
+                      hasFormatting: false,
+                    }
+                  };
+                  return [newItem, ...currentSubs];
+                }
+                return currentSubs;
+              });
+            }
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch channel updates:', error);
+      }
+    }
+    
+    setIsFetching(false);
+  };
+
   // Rules actions
   const handleAddRule = (newRule: Omit<AutomationRule, 'id'>) => {
     const ruleItem: AutomationRule = {
@@ -194,6 +282,8 @@ export function App() {
             onSelectForModify={handleSelectForModify}
             onSelectForSend={handleSelectForSend}
             onDeleteSubmission={handleDeleteSubmission}
+            onFetchUpdates={fetchChannelUpdates}
+            isFetching={isFetching}
           />
         )}
 
@@ -220,6 +310,7 @@ export function App() {
               )
             }
             onAddChannel={handleAddChannel}
+            settings={settings}
           />
         )}
 
@@ -230,6 +321,10 @@ export function App() {
             onToggleRule={handleToggleRule}
             onDeleteRule={handleDeleteRule}
           />
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsPanel settings={settings} onSave={handleSaveSettings} />
         )}
       </main>
 

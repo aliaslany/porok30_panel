@@ -70,3 +70,10 @@ export interface RMSStats {
   totalRejected: number;
   avgProcessTime: string;
 }
+
+export interface AppSettings {
+  telegramBotToken: string;
+  baleBotToken: string;
+  monitoredChannels: string[];
+}
+
